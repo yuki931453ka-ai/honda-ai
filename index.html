@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本田 覚 — 対話</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --kinari:#f5f1ea;
+  --surface:#fffefb;
+  --surface-warm:#f0ebe2;
+  --ink:#2c2825;
+  --ink-soft:#5a5550;
+  --konjiki:#b08d57;
+  --konjiki-soft:rgba(176,141,87,.10);
+  --konjiki-deep:#8a6d3b;
+  --ai-bubble:#f8f4ed;
+  --fuji:#7c6fa0;
+  --matcha:#6b8f71;
+  --border:#e6e0d6;
+  --shadow-sm:0 1px 2px rgba(44,40,37,.06);
+  --shadow-md:0 2px 8px rgba(44,40,37,.08);
+  --shadow-lg:0 4px 16px rgba(44,40,37,.10);
+  --sans:"Noto Sans JP",system-ui,-apple-system,sans-serif;
+  --serif:"Noto Serif JP",Georgia,"Times New Roman",serif;
+}
+
+html,body{height:100%;font-family:var(--sans);background:var(--kinari);color:var(--ink)}
+body{display:flex;flex-direction:column}
+
+/* ── subtle texture overlay ── */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── header ── */
+header{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:16px 24px;
+  display:flex;align-items:center;gap:16px;
+  box-shadow:var(--shadow-sm);
+  position:sticky;top:0;z-index:10;
+}
+.avatar{
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,var(--konjiki),var(--konjiki-deep));
+  color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-weight:500;font-size:20px;
+  flex-shrink:0;
+  box-shadow:0 2px 6px rgba(176,141,87,.25);
+}
+.header-info h1{
+  font-family:var(--serif);font-size:17px;font-weight:500;
+  letter-spacing:.04em;color:var(--ink);
+}
+.header-info p{font-size:12px;color:var(--ink-soft);margin-top:2px;letter-spacing:.02em}
+
+/* ── strictness slider ── */
+.slider-wrap{
+  margin-left:auto;display:flex;flex-direction:column;align-items:center;gap:4px;
+  min-width:180px;
+}
+.slider-labels{
+  display:flex;justify-content:space-between;width:100%;
+  font-size:10px;color:var(--ink-soft);letter-spacing:.02em;
+}
+.slider-labels span{white-space:nowrap}
+.slider-track{width:100%;display:flex;align-items:center;gap:8px}
+.slider-track input[type="range"]{
+  -webkit-appearance:none;appearance:none;
+  flex:1;height:4px;border-radius:2px;outline:none;cursor:pointer;
+  background:linear-gradient(to right,var(--matcha),var(--konjiki),#c07040);
+}
+.slider-track input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--surface);border:2px solid var(--konjiki);
+  box-shadow:var(--shadow-sm);cursor:pointer;
+  transition:box-shadow .2s;
+}
+.slider-track input[type="range"]::-webkit-slider-thumb:hover{
+  box-shadow:0 0 0 4px var(--konjiki-soft);
+}
+.slider-track input[type="range"]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;border:2px solid var(--konjiki);
+  background:var(--surface);box-shadow:var(--shadow-sm);cursor:pointer;
+}
+.slider-value{
+  font-size:11px;font-weight:500;color:var(--konjiki-deep);
+  min-width:24px;text-align:center;
+}
+
+/* ── chat area ── */
+.chat-area{
+  flex:1;overflow-y:auto;padding:24px;position:relative;z-index:1;
+  display:flex;flex-direction:column;gap:20px;
+  max-width:800px;width:100%;margin:0 auto;
+}
+
+/* ── messages ── */
+.msg{display:flex;gap:12px;max-width:680px;animation:fadeUp .35s ease-out}
+.msg.ai{align-self:flex-start}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+
+.msg .bubble{
+  padding:14px 18px;border-radius:16px;
+  line-height:1.8;font-size:14.5px;white-space:pre-wrap;
+  position:relative;
+}
+.msg.ai .bubble{
+  background:var(--ai-bubble);
+  box-shadow:var(--shadow-sm);
+  border:1px solid rgba(230,224,214,.6);
+  border-top-left-radius:4px;
+}
+.msg.user .bubble{
+  background:linear-gradient(135deg,var(--konjiki),var(--konjiki-deep));
+  color:#fff;
+  box-shadow:0 2px 8px rgba(176,141,87,.2);
+  border-top-right-radius:4px;
+}
+
+.msg .mini-avatar{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:500;margin-top:2px;
+}
+.msg.ai .mini-avatar{
+  background:linear-gradient(135deg,var(--konjiki),var(--konjiki-deep));
+  color:#fff;font-family:var(--serif);font-size:13px;
+  box-shadow:0 1px 4px rgba(176,141,87,.2);
+}
+.msg.user .mini-avatar{
+  background:var(--surface-warm);color:var(--ink-soft);font-size:10px;
+  border:1px solid var(--border);
+}
+
+/* ── feedback ── */
+.fb-strip{
+  display:flex;align-items:center;gap:6px;margin-top:10px;
+  opacity:0;transition:opacity .25s ease;
+}
+.msg.ai:hover .fb-strip,.fb-strip.active{opacity:1}
+
+.fb-btn{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:4px 10px;cursor:pointer;font-size:12px;
+  color:var(--ink-soft);transition:all .2s ease;
+  display:flex;align-items:center;gap:4px;
+}
+.fb-btn:hover{border-color:var(--konjiki);color:var(--konjiki)}
+.fb-btn:active{transform:scale(.97)}
+.fb-btn.selected{
+  border-color:var(--konjiki);
+  background:var(--konjiki-soft);
+  color:var(--konjiki-deep);
+}
+
+.fb-comment-box{margin-top:8px;display:none}
+.fb-comment-box.open{display:flex;gap:8px;align-items:flex-start}
+.fb-comment-box textarea{
+  flex:1;border:1px solid var(--border);border-radius:12px;
+  padding:10px 12px;font-size:13px;font-family:var(--sans);
+  resize:vertical;min-height:60px;outline:none;
+  background:var(--surface);color:var(--ink);line-height:1.6;
+}
+.fb-comment-box textarea:focus{border-color:var(--konjiki);box-shadow:0 0 0 3px var(--konjiki-soft)}
+.fb-comment-box button{
+  background:var(--konjiki);color:#fff;border:none;border-radius:20px;
+  padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;
+  white-space:nowrap;transition:all .2s;
+}
+.fb-comment-box button:hover{background:var(--konjiki-deep)}
+.fb-comment-box button:active{transform:scale(.97)}
+
+.fb-done{font-size:12px;color:var(--matcha);margin-top:6px;display:none}
+.fb-done.show{display:block;animation:fadeUp .3s ease-out}
+
+/* ── typing indicator ── */
+.typing{
+  display:flex;gap:5px;padding:14px 18px;
+  background:var(--ai-bubble);border-radius:16px;
+  border:1px solid rgba(230,224,214,.6);
+  box-shadow:var(--shadow-sm);width:fit-content;
+  border-top-left-radius:4px;
+}
+.typing span{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--konjiki);opacity:.4;
+  animation:pulse .9s infinite ease-in-out;
+}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+
+/* ── input area ── */
+.input-area{
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:16px 24px;display:flex;gap:12px;
+  box-shadow:0 -2px 8px rgba(44,40,37,.04);
+  position:relative;z-index:1;
+}
+.input-area textarea{
+  flex:1;border:1px solid var(--border);border-radius:16px;
+  padding:12px 16px;font-size:14px;font-family:var(--sans);
+  resize:none;min-height:48px;max-height:120px;outline:none;
+  line-height:1.6;background:var(--kinari);color:var(--ink);
+  transition:border-color .2s,box-shadow .2s;
+}
+.input-area textarea:focus{
+  border-color:var(--konjiki);
+  box-shadow:0 0 0 3px var(--konjiki-soft);
+}
+.input-area textarea::placeholder{color:var(--ink-soft);opacity:.6}
+.input-area button{
+  background:linear-gradient(135deg,var(--konjiki),var(--konjiki-deep));
+  color:#fff;border:none;border-radius:24px;
+  padding:0 24px;cursor:pointer;font-size:14px;font-weight:500;
+  font-family:var(--sans);
+  transition:all .2s;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(176,141,87,.2);
+}
+.input-area button:hover{filter:brightness(1.08);box-shadow:0 3px 10px rgba(176,141,87,.3)}
+.input-area button:active{transform:scale(.97)}
+.input-area button:disabled{opacity:.35;cursor:default;filter:none;transform:none;box-shadow:none}
+
+/* ── reviewer bar ── */
+.reviewer-bar{
+  background:var(--surface-warm);padding:10px 24px;
+  display:flex;align-items:center;gap:10px;
+  font-size:12px;color:var(--ink-soft);
+  border-top:1px solid var(--border);
+  position:relative;z-index:1;
+}
+.reviewer-bar label{font-weight:500}
+.reviewer-bar input{
+  border:1px solid var(--border);border-radius:8px;padding:5px 10px;
+  font-size:12px;background:var(--surface);outline:none;width:160px;
+  font-family:var(--sans);transition:border-color .2s;
+}
+.reviewer-bar input:focus{border-color:var(--konjiki)}
+.reviewer-bar .hint-text{margin-left:auto;font-size:11px;opacity:.5}
+
+/* ── welcome screen ── */
+.welcome{
+  text-align:center;padding:60px 24px 40px;color:var(--ink-soft);
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  margin:auto;
+}
+.welcome .big-avatar{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,var(--konjiki),var(--konjiki-deep));
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:32px;font-weight:500;
+  box-shadow:0 4px 16px rgba(176,141,87,.25);
+}
+.welcome h2{
+  font-family:var(--serif);font-size:22px;color:var(--ink);
+  font-weight:500;letter-spacing:.06em;
+}
+.welcome .subtitle{
+  font-size:13px;color:var(--konjiki-deep);letter-spacing:.08em;
+  font-weight:500;
+}
+.welcome p{
+  font-size:14px;line-height:1.8;max-width:420px;
+  color:var(--ink-soft);
+}
+.welcome .divider{
+  width:40px;height:1px;background:var(--border);margin:4px 0;
+}
+.welcome .hints{
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:8px;
+}
+.welcome .hint{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:24px;padding:8px 18px;font-size:13px;
+  cursor:pointer;transition:all .25s ease;color:var(--ink);
+  box-shadow:var(--shadow-sm);
+}
+.welcome .hint:hover{
+  border-color:var(--konjiki);color:var(--konjiki-deep);
+  background:var(--konjiki-soft);
+  box-shadow:var(--shadow-md);
+  transform:translateY(-1px);
+}
+
+/* ── name overlay ── */
+.name-overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(44,40,37,.45);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+}
+.name-overlay.hidden{display:none}
+.name-card{
+  background:var(--surface);border-radius:20px;padding:40px 36px;
+  text-align:center;max-width:360px;width:90%;
+  box-shadow:var(--shadow-lg);
+  animation:fadeUp .4s ease-out;
+}
+.name-card .big-avatar{
+  width:72px;height:72px;border-radius:50%;margin:0 auto 16px;
+  background:linear-gradient(135deg,var(--konjiki),var(--konjiki-deep));
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:28px;font-weight:500;
+  box-shadow:0 4px 16px rgba(176,141,87,.25);
+}
+.name-card h2{font-family:var(--serif);font-size:18px;margin-bottom:6px;color:var(--ink)}
+.name-card p{font-size:13px;color:var(--ink-soft);margin-bottom:20px;line-height:1.7}
+.name-card input{
+  width:100%;border:1px solid var(--border);border-radius:12px;
+  padding:12px 16px;font-size:14px;font-family:var(--sans);
+  outline:none;text-align:center;background:var(--kinari);
+  transition:border-color .2s,box-shadow .2s;
+}
+.name-card input:focus{border-color:var(--konjiki);box-shadow:0 0 0 3px var(--konjiki-soft)}
+.name-card button{
+  margin-top:14px;width:100%;padding:12px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--konjiki),var(--konjiki-deep));
+  color:#fff;font-size:14px;font-weight:500;cursor:pointer;
+  font-family:var(--sans);transition:all .2s;
+}
+.name-card button:hover{filter:brightness(1.08)}
+.name-card button:disabled{opacity:.35;cursor:default;filter:none}
+
+/* ── sidebar ── */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:280px;z-index:50;
+  background:var(--surface);border-right:1px solid var(--border);
+  box-shadow:var(--shadow-lg);
+  transform:translateX(-100%);transition:transform .3s ease;
+  display:flex;flex-direction:column;
+}
+.sidebar.open{transform:translateX(0)}
+.sidebar-backdrop{
+  position:fixed;inset:0;z-index:49;background:rgba(44,40,37,.25);
+  display:none;
+}
+.sidebar-backdrop.show{display:block}
+.sidebar-header{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sidebar-header h3{font-family:var(--serif);font-size:15px;font-weight:500}
+.sidebar-close{
+  background:none;border:none;cursor:pointer;color:var(--ink-soft);
+  font-size:20px;padding:4px 8px;border-radius:6px;transition:background .2s;
+}
+.sidebar-close:hover{background:var(--surface-warm)}
+.sidebar-user{
+  padding:12px 20px;background:var(--surface-warm);
+  font-size:12px;color:var(--ink-soft);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.sidebar-user strong{color:var(--ink);font-weight:500}
+.sidebar-user button{
+  background:none;border:none;cursor:pointer;
+  font-size:11px;color:var(--konjiki-deep);text-decoration:underline;
+}
+.sidebar-new{
+  margin:12px 16px;padding:10px;border:1px dashed var(--border);
+  border-radius:12px;background:none;cursor:pointer;
+  font-size:13px;color:var(--ink-soft);font-family:var(--sans);
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.sidebar-new:hover{border-color:var(--konjiki);color:var(--konjiki-deep);background:var(--konjiki-soft)}
+.session-list{
+  flex:1;overflow-y:auto;padding:8px 12px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.session-item{
+  padding:10px 14px;border-radius:10px;cursor:pointer;
+  transition:all .2s;border:1px solid transparent;
+}
+.session-item:hover{background:var(--surface-warm)}
+.session-item.active{background:var(--konjiki-soft);border-color:var(--konjiki)}
+.session-item .session-title{
+  font-size:13px;font-weight:500;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.session-item .session-meta{
+  font-size:11px;color:var(--ink-soft);margin-top:3px;
+  display:flex;justify-content:space-between;
+}
+.session-empty{
+  text-align:center;padding:32px 16px;
+  font-size:13px;color:var(--ink-soft);line-height:1.8;
+}
+.sidebar-toggle{
+  background:none;border:1px solid var(--border);border-radius:10px;
+  padding:8px 10px;cursor:pointer;color:var(--ink-soft);
+  transition:all .2s;display:flex;align-items:center;gap:6px;
+  font-size:12px;font-family:var(--sans);white-space:nowrap;
+}
+.sidebar-toggle:hover{border-color:var(--konjiki);color:var(--konjiki-deep)}
+.sidebar-toggle svg{flex-shrink:0}
+
+/* ── animations ── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes pulse{
+  0%,100%{opacity:.3;transform:scale(.85)}
+  50%{opacity:.8;transform:scale(1)}
+}
+
+/* ── responsive ── */
+@media(max-width:600px){
+  .msg{max-width:100%}
+  .input-area{padding:12px 14px}
+  .chat-area{padding:16px 14px}
+  header{padding:12px 16px}
+  .welcome{padding:40px 16px 24px}
+  .welcome .hints{flex-direction:column;align-items:center}
+  .welcome .hint{width:100%;max-width:280px;text-align:center}
+  header{flex-wrap:wrap;gap:8px}
+  .sidebar-toggle span{display:none}
+  .slider-wrap{min-width:unset;width:100%;margin-left:0;margin-top:4px;order:10}
+  .sidebar{width:260px}
+  .reviewer-bar{padding:8px 14px;flex-wrap:wrap}
+  .reviewer-bar .hint-text{margin-left:0;width:100%;margin-top:4px}
+}
+</style>
+</head>
+<body>
+
+<!-- name entry overlay -->
+<div class="name-overlay" id="nameOverlay">
+  <div class="name-card">
+    <div class="big-avatar">覚</div>
+    <h2>本田 覚 との対話</h2>
+    <p>お名前を入力してください。<br>会話履歴があなたの名前で保存されます。</p>
+    <input type="text" id="nameInput" placeholder="あなたのお名前" autocomplete="name"
+           maxlength="30">
+    <div id="nameStatus" style="font-size:12px;margin-top:8px;color:var(--ink-soft);min-height:18px"></div>
+    <button id="nameSubmit" disabled>はじめる</button>
+  </div>
+</div>
+
+<!-- sidebar backdrop -->
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<!-- sidebar -->
+<nav class="sidebar" id="sidebar" aria-label="会話履歴">
+  <div class="sidebar-header">
+    <h3>会話履歴</h3>
+    <button class="sidebar-close" id="sidebarClose" aria-label="閉じる">✕</button>
+  </div>
+  <div class="sidebar-user" id="sidebarUser">
+    <span><strong id="sidebarUserName"></strong> としてログイン中</span>
+    <button id="changeUserBtn">切替</button>
+  </div>
+  <button class="sidebar-new" id="newSessionBtn">＋ 新しい会話</button>
+  <div class="session-list" id="sessionList"></div>
+</nav>
+
+<header>
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="会話履歴を開く">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>履歴</span>
+  </button>
+  <div class="avatar" aria-hidden="true">覚</div>
+  <div class="header-info">
+    <h1>本田 覚</h1>
+    <p>Nu Skin Team Elite ・ Pleasure</p>
+  </div>
+  <div class="slider-wrap">
+    <div class="slider-labels"><span>🕊 やさしい</span><span>🔥 厳しい</span></div>
+    <div class="slider-track">
+      <input type="range" id="strictnessSlider" min="0" max="100" value="50"
+             aria-label="厳しさの調整">
+      <span class="slider-value" id="strictnessValue">50</span>
+    </div>
+  </div>
+</header>
+
+<div class="chat-area" id="chatArea" role="log" aria-live="polite" aria-label="チャット会話">
+  <div class="welcome" id="welcome">
+    <div class="big-avatar">覚</div>
+    <h2>本田 覚</h2>
+    <div class="subtitle">SATORU HONDA</div>
+    <div class="divider"></div>
+    <p>本田覚さんの講演や活動から学んだ<br>
+    言葉と想いをもとにした対話AIです。<br>
+    気軽に話しかけてみてください。</p>
+    <div class="hints">
+      <div class="hint" role="button" tabindex="0" onclick="sendHint(this)" onkeydown="if(event.key==='Enter'||event.key===' ')sendHint(this)">ビジネスを始めたきっかけは？</div>
+      <div class="hint" role="button" tabindex="0" onclick="sendHint(this)" onkeydown="if(event.key==='Enter'||event.key===' ')sendHint(this)">Pleasureの理念について教えて</div>
+      <div class="hint" role="button" tabindex="0" onclick="sendHint(this)" onkeydown="if(event.key==='Enter'||event.key===' ')sendHint(this)">社会貢献活動について聞きたい</div>
+      <div class="hint" role="button" tabindex="0" onclick="sendHint(this)" onkeydown="if(event.key==='Enter'||event.key===' ')sendHint(this)">チームエリートに至るまでの道のり</div>
+    </div>
+  </div>
+</div>
+
+<div class="reviewer-bar">
+  <span class="hint-text" style="margin-left:0">各回答にフィードバックできます（👍👎 ホバーで表示）</span>
+</div>
+
+<div class="input-area">
+  <textarea id="userInput" placeholder="メッセージを入力...（Enter×2で送信 / Shift+Enterで改行）" rows="1"></textarea>
+  <button id="sendBtn" onclick="sendMessage()">送信</button>
+</div>
+
+<script>
+const chatArea = document.getElementById('chatArea');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const welcome = document.getElementById('welcome');
+const strictnessSlider = document.getElementById('strictnessSlider');
+const strictnessValue = document.getElementById('strictnessValue');
+const nameOverlay = document.getElementById('nameOverlay');
+const nameInput = document.getElementById('nameInput');
+const nameSubmit = document.getElementById('nameSubmit');
+const nameStatus = document.getElementById('nameStatus');
+const sidebar = document.getElementById('sidebar');
+const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebarClose = document.getElementById('sidebarClose');
+const sidebarUserName = document.getElementById('sidebarUserName');
+const changeUserBtn = document.getElementById('changeUserBtn');
+const newSessionBtn = document.getElementById('newSessionBtn');
+const sessionList = document.getElementById('sessionList');
+
+let currentUser = '';
+let currentSessionId = '';
+let conversationHistory = [];
+let messageCounter = 0;
+let justComposed = false;
+
+strictnessSlider.addEventListener('input', () => {
+  strictnessValue.textContent = strictnessSlider.value;
+});
+
+// ── name entry ──
+const savedUser = localStorage.getItem('honda_user');
+if (savedUser) {
+  currentUser = savedUser;
+  enterApp();
+} else {
+  sendBtn.disabled = true;
+  userInput.disabled = true;
+}
+
+nameInput.addEventListener('input', () => {
+  const name = nameInput.value.trim();
+  nameSubmit.disabled = !name;
+  if (name) {
+    const sessions = getSessions(name);
+    if (sessions.length > 0) {
+      nameStatus.textContent = `${name} さんの会話が ${sessions.length} 件見つかりました`;
+      nameStatus.style.color = 'var(--konjiki-deep)';
+      nameSubmit.textContent = '会話を再開する';
+    } else {
+      nameStatus.textContent = '';
+      nameSubmit.textContent = 'はじめる';
+    }
+  } else {
+    nameStatus.textContent = '';
+    nameSubmit.textContent = 'はじめる';
+  }
+});
+
+nameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !nameSubmit.disabled) {
+    e.preventDefault();
+    nameSubmit.click();
+  }
+});
+
+nameSubmit.addEventListener('click', () => {
+  const name = nameInput.value.trim();
+  if (!name) return;
+  currentUser = name;
+  localStorage.setItem('honda_user', name);
+  enterApp();
+});
+
+function enterApp() {
+  nameOverlay.classList.add('hidden');
+  sendBtn.disabled = false;
+  userInput.disabled = false;
+  sidebarUserName.textContent = currentUser;
+
+  const sessions = getSessions(currentUser);
+  if (sessions.length > 0) {
+    loadSession(sessions[0].id);
+  } else {
+    startNewSession();
+  }
+  renderSessionList();
+  userInput.focus();
+}
+
+// ── sidebar ──
+sidebarToggle.addEventListener('click', () => {
+  sidebar.classList.add('open');
+  sidebarBackdrop.classList.add('show');
+});
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  sidebarBackdrop.classList.remove('show');
+}
+sidebarClose.addEventListener('click', closeSidebar);
+sidebarBackdrop.addEventListener('click', closeSidebar);
+
+changeUserBtn.addEventListener('click', () => {
+  closeSidebar();
+  localStorage.removeItem('honda_user');
+  currentUser = '';
+  currentSessionId = '';
+  conversationHistory = [];
+  nameOverlay.classList.remove('hidden');
+  nameInput.value = '';
+  nameStatus.textContent = '';
+  nameSubmit.textContent = 'はじめる';
+  nameSubmit.disabled = true;
+  sendBtn.disabled = true;
+  userInput.disabled = true;
+  clearChatArea();
+  welcome.style.display = '';
+  nameInput.focus();
+});
+
+newSessionBtn.addEventListener('click', () => {
+  startNewSession();
+  renderSessionList();
+  closeSidebar();
+});
+
+// ── session storage ──
+function storageKey(user) { return `honda_sessions_${user}`; }
+
+function getSessions(user) {
+  try {
+    const raw = localStorage.getItem(storageKey(user || currentUser));
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveSessions(sessions) {
+  localStorage.setItem(storageKey(currentUser), JSON.stringify(sessions));
+}
+
+function startNewSession() {
+  currentSessionId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'ses_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  conversationHistory = [];
+  messageCounter = 0;
+  clearChatArea();
+  welcome.style.display = '';
+
+  const sessions = getSessions();
+  sessions.unshift({
+    id: currentSessionId,
+    title: '新しい会話',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    messages: [],
+  });
+  if (sessions.length > 50) sessions.length = 50;
+  saveSessions(sessions);
+}
+
+function saveCurrentSession() {
+  if (!currentUser || !currentSessionId) return;
+  const sessions = getSessions();
+  const idx = sessions.findIndex(s => s.id === currentSessionId);
+  if (idx === -1) return;
+  sessions[idx].messages = conversationHistory;
+  sessions[idx].updatedAt = new Date().toISOString();
+  if (conversationHistory.length > 0) {
+    const firstUser = conversationHistory.find(m => m.role === 'user');
+    if (firstUser) {
+      sessions[idx].title = firstUser.content.slice(0, 40) + (firstUser.content.length > 40 ? '…' : '');
+    }
+  }
+  saveSessions(sessions);
+  renderSessionList();
+}
+
+function loadSession(sessionId) {
+  const sessions = getSessions();
+  const session = sessions.find(s => s.id === sessionId);
+  if (!session) { startNewSession(); return; }
+
+  currentSessionId = session.id;
+  conversationHistory = session.messages || [];
+  messageCounter = 0;
+  clearChatArea();
+
+  if (conversationHistory.length === 0) {
+    welcome.style.display = '';
+  } else {
+    welcome.style.display = 'none';
+    for (let i = 0; i < conversationHistory.length; i++) {
+      const msg = conversationHistory[i];
+      messageCounter++;
+      const role = msg.role === 'user' ? 'user' : 'ai';
+      const msgId = `${role}-${messageCounter}`;
+      const el = createMsgEl(role, msg.content, msgId);
+      if (role === 'ai' && i > 0 && conversationHistory[i - 1].role === 'user') {
+        el.dataset.userMessage = conversationHistory[i - 1].content;
+      }
+      chatArea.appendChild(el);
+    }
+    chatArea.scrollTop = chatArea.scrollHeight;
+  }
+  renderSessionList();
+}
+
+function deleteSession(sessionId) {
+  let sessions = getSessions();
+  sessions = sessions.filter(s => s.id !== sessionId);
+  saveSessions(sessions);
+  if (sessionId === currentSessionId) {
+    if (sessions.length > 0) {
+      loadSession(sessions[0].id);
+    } else {
+      startNewSession();
+    }
+  }
+  renderSessionList();
+}
+
+function clearChatArea() {
+  while (chatArea.firstChild) chatArea.removeChild(chatArea.firstChild);
+  chatArea.appendChild(welcome);
+}
+
+function renderSessionList() {
+  sessionList.innerHTML = '';
+  const sessions = getSessions();
+  if (sessions.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'session-empty';
+    empty.textContent = 'まだ会話がありません。\n話しかけてみましょう。';
+    sessionList.appendChild(empty);
+    return;
+  }
+  for (const s of sessions) {
+    const item = document.createElement('div');
+    item.className = 'session-item' + (s.id === currentSessionId ? ' active' : '');
+
+    const title = document.createElement('div');
+    title.className = 'session-title';
+    title.textContent = s.title || '新しい会話';
+
+    const meta = document.createElement('div');
+    meta.className = 'session-meta';
+    const msgCount = (s.messages || []).length;
+    const dateStr = formatDate(s.updatedAt || s.createdAt);
+    const dateSpan = document.createElement('span');
+    dateSpan.textContent = dateStr;
+    const countSpan = document.createElement('span');
+    countSpan.textContent = Math.floor(msgCount / 2) + ' 往復';
+    meta.appendChild(dateSpan);
+    meta.appendChild(countSpan);
+
+    item.appendChild(title);
+    item.appendChild(meta);
+    item.addEventListener('click', () => { loadSession(s.id); closeSidebar(); });
+
+    sessionList.appendChild(item);
+  }
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'たった今';
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '時間前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + '日前';
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+// ── IME handling ──
+userInput.addEventListener('compositionend', () => { justComposed = true; });
+
+userInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.shiftKey) return;
+  if (e.key === 'Enter') {
+    if (e.isComposing || e.keyCode === 229) return;
+    if (sendBtn.disabled) return;
+    if (justComposed) { justComposed = false; e.preventDefault(); return; }
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+userInput.addEventListener('input', () => {
+  userInput.style.height = 'auto';
+  userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+});
+
+function sendHint(el) {
+  userInput.value = el.textContent;
+  sendMessage();
+}
+
+// ── message rendering ──
+function createMsgEl(role, text, msgId) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+  wrap.dataset.msgId = msgId;
+
+  const avatarEl = document.createElement('div');
+  avatarEl.className = 'mini-avatar';
+  avatarEl.textContent = role === 'ai' ? '覚' : 'You';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+
+  wrap.appendChild(avatarEl);
+
+  const col = document.createElement('div');
+  col.style.flex = '1';
+  col.style.minWidth = '0';
+  col.appendChild(bubble);
+
+  if (role === 'ai') {
+    const fbStrip = document.createElement('div');
+    fbStrip.className = 'fb-strip';
+
+    const thumbUpSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>';
+    const thumbDownSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg>';
+    const commentSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+
+    const goodBtn = document.createElement('button');
+    goodBtn.className = 'fb-btn';
+    goodBtn.dataset.rating = 'good';
+    goodBtn.innerHTML = thumbUpSvg + ' 良い';
+    goodBtn.setAttribute('aria-label', 'この回答に「良い」評価');
+    goodBtn.addEventListener('click', () => rate(goodBtn, msgId));
+
+    const badBtn = document.createElement('button');
+    badBtn.className = 'fb-btn';
+    badBtn.dataset.rating = 'bad';
+    badBtn.innerHTML = thumbDownSvg + ' 違う';
+    badBtn.setAttribute('aria-label', 'この回答に「違う」評価');
+    badBtn.addEventListener('click', () => rate(badBtn, msgId));
+
+    const cmtBtn = document.createElement('button');
+    cmtBtn.className = 'fb-btn';
+    cmtBtn.innerHTML = commentSvg + ' コメント';
+    cmtBtn.setAttribute('aria-label', 'この回答にコメント');
+    cmtBtn.addEventListener('click', () => toggleComment(cmtBtn, msgId));
+
+    fbStrip.appendChild(goodBtn);
+    fbStrip.appendChild(badBtn);
+    fbStrip.appendChild(cmtBtn);
+    col.appendChild(fbStrip);
+
+    const commentBox = document.createElement('div');
+    commentBox.className = 'fb-comment-box';
+    commentBox.id = `comment-${msgId}`;
+    const cmtTextarea = document.createElement('textarea');
+    cmtTextarea.placeholder = '本田さんならこうは言わない、もっとこう言う…など';
+    const cmtSubmitBtn = document.createElement('button');
+    cmtSubmitBtn.textContent = '送信';
+    cmtSubmitBtn.addEventListener('click', () => submitComment(msgId));
+    commentBox.appendChild(cmtTextarea);
+    commentBox.appendChild(cmtSubmitBtn);
+    col.appendChild(commentBox);
+
+    const done = document.createElement('div');
+    done.className = 'fb-done';
+    done.id = `done-${msgId}`;
+    done.textContent = '✓ フィードバックを記録しました';
+    col.appendChild(done);
+  }
+
+  wrap.appendChild(col);
+  return wrap;
+}
+
+function showTyping() {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ai';
+  wrap.id = 'typing-indicator';
+  const av = document.createElement('div');
+  av.className = 'mini-avatar';
+  av.textContent = '覚';
+  const dots = document.createElement('div');
+  dots.className = 'typing';
+  dots.innerHTML = '<span></span><span></span><span></span>';
+  wrap.appendChild(av);
+  wrap.appendChild(dots);
+  chatArea.appendChild(wrap);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if (t) t.remove();
+}
+
+// ── send message ──
+async function sendMessage() {
+  const text = userInput.value.trim();
+  if (!text) return;
+
+  welcome.style.display = 'none';
+
+  messageCounter++;
+  const userMsgId = `user-${messageCounter}`;
+  chatArea.appendChild(createMsgEl('user', text, userMsgId));
+  userInput.value = '';
+  userInput.style.height = 'auto';
+  sendBtn.disabled = true;
+
+  conversationHistory.push({ role: 'user', content: text });
+  saveCurrentSession();
+
+  showTyping();
+  chatArea.scrollTop = chatArea.scrollHeight;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: conversationHistory, strictness: parseInt(strictnessSlider.value, 10) }),
+    });
+    removeTyping();
+
+    if (!res.ok) {
+      console.error('API response error:', res.status);
+      conversationHistory.pop();
+      saveCurrentSession();
+      chatArea.appendChild(createMsgEl('ai', '申し訳ありません。一時的なエラーが発生しました。しばらく後でお試しください。', `err-${messageCounter}`));
+    } else {
+      const data = await res.json();
+      if (data.error) {
+        console.error('API error:', data.error);
+        conversationHistory.pop();
+        saveCurrentSession();
+        chatArea.appendChild(createMsgEl('ai', '申し訳ありません。応答の生成中にエラーが発生しました。', `err-${messageCounter}`));
+      } else {
+        messageCounter++;
+        const aiMsgId = `ai-${messageCounter}`;
+        const aiEl = createMsgEl('ai', data.text, aiMsgId);
+        aiEl.dataset.userMessage = text;
+        chatArea.appendChild(aiEl);
+        conversationHistory.push({ role: 'assistant', content: data.text });
+        saveCurrentSession();
+      }
+    }
+  } catch (err) {
+    removeTyping();
+    console.error('Network error:', err);
+    conversationHistory.pop();
+    saveCurrentSession();
+    chatArea.appendChild(createMsgEl('ai', '通信エラーが発生しました。ネットワーク接続を確認してください。', `err-${messageCounter}`));
+  }
+
+  sendBtn.disabled = false;
+  chatArea.scrollTop = chatArea.scrollHeight;
+  userInput.focus();
+}
+
+// ── feedback ──
+function rate(btn, msgId) {
+  const strip = btn.parentElement;
+  strip.classList.add('active');
+  strip.querySelectorAll('.fb-btn[data-rating]').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  const msgEl = document.querySelector(`[data-msg-id="${msgId}"]`);
+  const aiText = msgEl?.querySelector('.bubble')?.textContent || '';
+  const userText = msgEl?.dataset.userMessage || '';
+  sendFeedback(msgId, userText, aiText, btn.dataset.rating, '');
+}
+
+function toggleComment(btn, msgId) {
+  const box = document.getElementById(`comment-${msgId}`);
+  box.classList.toggle('open');
+  if (box.classList.contains('open')) box.querySelector('textarea').focus();
+}
+
+function submitComment(msgId) {
+  const box = document.getElementById(`comment-${msgId}`);
+  const comment = box.querySelector('textarea').value.trim();
+  if (!comment) return;
+
+  const msgEl = document.querySelector(`[data-msg-id="${msgId}"]`);
+  const aiText = msgEl?.querySelector('.bubble')?.textContent || '';
+  const userText = msgEl?.dataset.userMessage || '';
+  const strip = msgEl?.querySelector('.fb-strip');
+  const selectedBtn = strip?.querySelector('.fb-btn.selected');
+  const rating = selectedBtn?.dataset.rating || 'comment_only';
+
+  sendFeedback(msgId, userText, aiText, rating, comment);
+  box.classList.remove('open');
+}
+
+async function sendFeedback(msgId, userMessage, aiResponse, rating, comment) {
+  try {
+    await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message_id: msgId,
+        session_id: currentSessionId,
+        user_message: userMessage,
+        ai_response: aiResponse,
+        rating,
+        comment,
+        reviewer: currentUser || 'anonymous',
+        strictness: parseInt(strictnessSlider.value, 10),
+      }),
+    });
+    const done = document.getElementById(`done-${msgId}`);
+    if (done) {
+      done.classList.add('show');
+      setTimeout(() => done.classList.remove('show'), 3000);
+    }
+  } catch (err) {
+    console.error('Feedback error:', err);
+    const done = document.getElementById(`done-${msgId}`);
+    if (done) {
+      done.textContent = '⚠ フィードバックの送信に失敗しました';
+      done.style.color = 'var(--red, #c0392b)';
+      done.classList.add('show');
+      setTimeout(() => done.classList.remove('show'), 4000);
+    }
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>honda-ai スケーラビリティ分析レポート</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafaf8;--surface:#fff;--ink:#1a1a1a;--ink-soft:#666;
+  --accent:#b08d57;--accent-deep:#8a6d3b;--green:#2d8a4e;--red:#c0392b;--orange:#e67e22;--blue:#2980b9;
+  --border:#e5e5e0;--shadow:0 1px 4px rgba(0,0,0,.06);
+}
+body{font-family:"Noto Sans JP",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.8;padding:0}
+.container{max-width:900px;margin:0 auto;padding:24px}
+header.report-header{
+  background:linear-gradient(135deg,#2c2825,#4a3f35);color:#fff;
+  padding:48px 24px;text-align:center;
+}
+header.report-header h1{font-size:28px;font-weight:700;letter-spacing:.04em}
+header.report-header p{font-size:14px;opacity:.7;margin-top:8px}
+header.report-header .date{font-size:12px;opacity:.5;margin-top:16px}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin:24px 0}
+.toc h2{font-size:16px;margin-bottom:12px;color:var(--accent-deep)}
+.toc ol{padding-left:20px}
+.toc li{margin:6px 0}
+.toc a{color:var(--blue);text-decoration:none}
+.toc a:hover{text-decoration:underline}
+section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin:20px 0;box-shadow:var(--shadow)}
+section h2{font-size:20px;font-weight:700;color:var(--accent-deep);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+section h3{font-size:16px;font-weight:700;margin:20px 0 10px;color:var(--ink)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th,td{padding:10px 14px;border:1px solid var(--border);text-align:left}
+th{background:#f5f3ee;font-weight:500;white-space:nowrap}
+td{vertical-align:top}
+.cost{font-weight:700;color:var(--accent-deep)}
+.warn{color:var(--orange);font-weight:500}
+.danger{color:var(--red);font-weight:500}
+.ok{color:var(--green);font-weight:500}
+.highlight-box{background:#fdf6e3;border:1px solid #e8d5a3;border-radius:8px;padding:16px;margin:12px 0;font-size:14px}
+.danger-box{background:#fdf0ee;border:1px solid #e8a3a3;border-radius:8px;padding:16px;margin:12px 0;font-size:14px}
+.ok-box{background:#eef8f0;border:1px solid #a3d4ae;border-radius:8px;padding:16px;margin:12px 0;font-size:14px}
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:16px 0}
+.scenario-card{border:1px solid var(--border);border-radius:10px;padding:18px;background:var(--bg)}
+.scenario-card h4{font-size:14px;font-weight:700;margin-bottom:8px}
+.scenario-card .price{font-size:24px;font-weight:700;color:var(--accent-deep);margin:8px 0}
+.scenario-card .detail{font-size:12px;color:var(--ink-soft);line-height:1.6}
+.arch-diagram{background:#f8f6f1;border:1px solid var(--border);border-radius:8px;padding:20px;font-family:monospace;font-size:13px;line-height:1.6;overflow-x:auto;white-space:pre}
+.verdict{font-size:18px;font-weight:700;margin:8px 0}
+.footnote{font-size:12px;color:var(--ink-soft);margin-top:32px;padding-top:16px;border-top:1px solid var(--border)}
+ul{padding-left:20px;margin:8px 0}
+li{margin:4px 0}
+</style>
+</head>
+<body>
+
+<header class="report-header">
+  <h1>honda-ai スケーラビリティ分析レポート</h1>
+  <p>1,000 ユーザー規模の運用に向けた費用・負荷・構成の分析</p>
+  <div class="date">2026-07-01 作成 | 門屋様向け</div>
+</header>
+
+<div class="container">
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#assumptions">前提条件と利用シナリオ</a></li>
+    <li><a href="#api-cost">Anthropic API 費用試算</a></li>
+    <li><a href="#infra">インフラ構成の評価（Vercel / Supabase / Mac mini）</a></li>
+    <li><a href="#speed">動作速度と体感パフォーマンス</a></li>
+    <li><a href="#pricing">適切な価格設定の考察</a></li>
+    <li><a href="#architecture">推奨アーキテクチャ</a></li>
+    <li><a href="#roadmap">段階的スケールアップの手順</a></li>
+  </ol>
+</nav>
+
+<!-- ============================== -->
+<section id="assumptions">
+  <h2>1. 前提条件と利用シナリオ</h2>
+
+  <h3>現在のシステム構成</h3>
+  <table>
+    <tr><th>要素</th><th>現状</th></tr>
+    <tr><td>バックエンド</td><td>Flask (Python) + Werkzeug 開発サーバー</td></tr>
+    <tr><td>AI エンジン</td><td>Anthropic Claude Sonnet 4.6 (claude-sonnet-4-6)</td></tr>
+    <tr><td>フロントエンド</td><td>SPA (index.html)、localStorage でセッション管理</td></tr>
+    <tr><td>データ保存</td><td>フィードバック → JSONL ファイル / 会話履歴 → クライアント localStorage</td></tr>
+    <tr><td>ホスティング</td><td>ローカル開発（localhost:5177）</td></tr>
+  </table>
+
+  <h3>利用シナリオ（3パターン）</h3>
+  <div class="scenario-grid">
+    <div class="scenario-card">
+      <h4>A. ライト利用</h4>
+      <p class="detail">
+        登録1,000人のうち日常的に使うのは約100人。<br>
+        1日1回、平均5往復の会話。<br>
+        週末やイベント前後にスパイクあり。
+      </p>
+    </div>
+    <div class="scenario-card">
+      <h4>B. ミドル利用</h4>
+      <p class="detail">
+        毎日300人がアクティブ。<br>
+        1日1〜2回、平均8往復の会話。<br>
+        ピーク時は同時接続50人。
+      </p>
+    </div>
+    <div class="scenario-card">
+      <h4>C. ヘビー利用</h4>
+      <p class="detail">
+        毎日500人以上がアクティブ。<br>
+        1日2〜3回、平均10往復の会話。<br>
+        ピーク時は同時接続100人以上。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== -->
+<section id="api-cost">
+  <h2>2. Anthropic API 費用試算</h2>
+
+  <h3>Claude Sonnet 4.6 料金体系</h3>
+  <table>
+    <tr><th>項目</th><th>単価</th></tr>
+    <tr><td>入力トークン</td><td class="cost">$3.00 / 100万トークン</td></tr>
+    <tr><td>出力トークン</td><td class="cost">$15.00 / 100万トークン</td></tr>
+    <tr><td>プロンプトキャッシュ書き込み</td><td>$3.75 / 100万トークン</td></tr>
+    <tr><td>プロンプトキャッシュ読み取り</td><td>$0.30 / 100万トークン（90%オフ）</td></tr>
+  </table>
+
+  <h3>1会話あたりのトークン消費（実測値ベース）</h3>
+  <div class="highlight-box">
+    <strong>実測:</strong> システムプロンプト（本田さんペルソナ + トレーニングデータ）= 約7,600トークン（固定）<br>
+    各ターンのユーザー入力 ≈ 50〜100トークン / AI応答 ≈ 100〜300トークン
+  </div>
+
+  <table>
+    <tr><th>会話の長さ</th><th>累計入力トークン</th><th>累計出力トークン</th><th>費用（キャッシュなし）</th><th>費用（キャッシュあり）</th></tr>
+    <tr><td>5往復</td><td>~42,000</td><td>~750</td><td class="cost">$0.14</td><td class="cost">$0.04</td></tr>
+    <tr><td>8往復</td><td>~70,000</td><td>~1,200</td><td class="cost">$0.23</td><td class="cost">$0.07</td></tr>
+    <tr><td>10往復</td><td>~88,000</td><td>~1,500</td><td class="cost">$0.29</td><td class="cost">$0.09</td></tr>
+  </table>
+  <p style="font-size:12px;color:var(--ink-soft);margin-top:4px">
+    ※ 全会話履歴を毎ターン送信する現在の設計に基づく。キャッシュ有効時はシステムプロンプト部分（7,600トークン）が90%割引。
+  </p>
+
+  <h3>月間費用シミュレーション</h3>
+  <table>
+    <tr><th>シナリオ</th><th>日次セッション数</th><th>平均往復数</th><th>月額（キャッシュなし）</th><th>月額（キャッシュあり）</th></tr>
+    <tr>
+      <td>A. ライト</td>
+      <td>100 セッション/日</td>
+      <td>5往復</td>
+      <td class="cost">$420 (≈¥63,000)</td>
+      <td class="ok">$120 (≈¥18,000)</td>
+    </tr>
+    <tr>
+      <td>B. ミドル</td>
+      <td>450 セッション/日</td>
+      <td>8往復</td>
+      <td class="cost">$3,105 (≈¥465,000)</td>
+      <td class="warn">$945 (≈¥142,000)</td>
+    </tr>
+    <tr>
+      <td>C. ヘビー</td>
+      <td>1,200 セッション/日</td>
+      <td>10往復</td>
+      <td class="danger">$10,440 (≈¥1,566,000)</td>
+      <td class="danger">$3,240 (≈¥486,000)</td>
+    </tr>
+  </table>
+
+  <div class="danger-box">
+    <strong>重要:</strong> キャッシュなしのミドル〜ヘビー利用は月額数十万〜百万円超。
+    <strong>プロンプトキャッシュの有効化は必須</strong>。さらにコスト削減には以下が有効:
+    <ul>
+      <li>Claude Haiku 4.5 への切り替え（入力 $0.80 / 出力 $4.00 → 約73%コスト削減）</li>
+      <li>会話履歴の要約化（古いターンを要約して入力トークンを圧縮）</li>
+      <li>1セッションの最大往復数を制限（例: 20往復で新セッション強制）</li>
+    </ul>
+  </div>
+
+  <h3>モデル別コスト比較（シナリオB・月額・キャッシュあり）</h3>
+  <table>
+    <tr><th>モデル</th><th>入力単価</th><th>出力単価</th><th>月額目安</th><th>品質</th></tr>
+    <tr><td>Sonnet 4.6</td><td>$3.00</td><td>$15.00</td><td class="warn">¥142,000</td><td>最高の応答品質</td></tr>
+    <tr><td>Haiku 4.5</td><td>$0.80</td><td>$4.00</td><td class="ok">¥38,000</td><td>Sonnet 90%の品質・3倍速い</td></tr>
+    <tr><td>Haiku + Advisor (Opus)</td><td>$0.80 + α</td><td>$4.00 + α</td><td class="cost">¥50,000</td><td>Haiku実行 + Opus判断力</td></tr>
+  </table>
+</section>
+
+<!-- ============================== -->
+<section id="infra">
+  <h2>3. インフラ構成の評価</h2>
+
+  <h3>Vercel</h3>
+  <table>
+    <tr><th>項目</th><th>Free</th><th>Pro ($20/月)</th><th>1,000ユーザーでの必要量</th><th>判定</th></tr>
+    <tr><td>帯域幅</td><td>100GB/月</td><td>1TB/月</td><td>~5GB/月（テキスト主体）</td><td class="ok">余裕</td></tr>
+    <tr><td>Serverless 実行数</td><td>100K/月</td><td>1M/月</td><td>シナリオB: ~40万/月</td><td class="warn">Pro必須</td></tr>
+    <tr><td>関数実行時間</td><td>10秒</td><td>60秒</td><td>Claude応答: 5〜15秒</td><td class="danger">Free不可</td></tr>
+    <tr><td>同時実行数</td><td>制限あり</td><td>制限緩和</td><td>ピーク50同時</td><td class="warn">要監視</td></tr>
+  </table>
+  <div class="highlight-box">
+    <strong>結論:</strong> Vercel Pro ($20/月) で シナリオA〜B は対応可能。<br>
+    ただし Claude API の応答が10秒を超える場合があるため、<strong>Free プランでは関数タイムアウトの可能性が高い</strong>。
+  </div>
+
+  <h3>Supabase</h3>
+  <table>
+    <tr><th>項目</th><th>Free</th><th>Pro ($25/月)</th><th>1,000ユーザーでの必要量</th><th>判定</th></tr>
+    <tr><td>データベース容量</td><td>500MB</td><td>8GB</td><td>フィードバック: ~50MB/年</td><td class="ok">Free で十分</td></tr>
+    <tr><td>API リクエスト</td><td>無制限</td><td>無制限</td><td>-</td><td class="ok">問題なし</td></tr>
+    <tr><td>Auth ユーザー数</td><td>50K MAU</td><td>100K MAU</td><td>1,000人</td><td class="ok">余裕</td></tr>
+    <tr><td>Edge Functions</td><td>500K/月</td><td>2M/月</td><td>未使用</td><td>-</td></tr>
+  </table>
+  <div class="ok-box">
+    <strong>結論:</strong> Supabase Free で十分。会話履歴をサーバー側に保存する場合も Free 範囲内に収まる。
+    将来的にフィードバック分析やペルソナ自動改修を行う場合は Pro 移行を検討。
+  </div>
+
+  <h3>Mac mini（自宅サーバー）</h3>
+  <table>
+    <tr><th>項目</th><th>評価</th><th>詳細</th></tr>
+    <tr><td>処理能力</td><td class="ok">十分</td><td>Flask + Gunicorn は軽量。同時50接続でも問題なし</td></tr>
+    <tr><td>ネットワーク</td><td class="danger">課題大</td><td>自宅回線のアップロード速度、固定IP不在、ポート開放のセキュリティリスク</td></tr>
+    <tr><td>可用性</td><td class="danger">課題大</td><td>停電・回線障害で全ユーザーがアクセス不能。SLA保証なし</td></tr>
+    <tr><td>SSL/TLS</td><td class="warn">追加作業</td><td>Let's Encrypt + Nginx リバースプロキシが必要</td></tr>
+    <tr><td>コスト</td><td class="ok">電気代のみ</td><td>月額 ~¥1,000（24時間稼働時）</td></tr>
+  </table>
+  <div class="highlight-box">
+    <strong>結論:</strong> Mac mini は開発・テスト環境としては最適。<br>
+    本番運用には <strong>Cloudflare Tunnel</strong> を使えば固定IP不要・SSL自動で自宅サーバーを公開可能（無料）。<br>
+    ただし可用性のリスクは残るため、1,000人規模では Vercel + Supabase をメインに据えるのが安全。
+  </div>
+</section>
+
+<!-- ============================== -->
+<section id="speed">
+  <h2>4. 動作速度と体感パフォーマンス</h2>
+
+  <h3>レスポンスタイム内訳</h3>
+  <table>
+    <tr><th>処理</th><th>所要時間</th><th>備考</th></tr>
+    <tr><td>クライアント → サーバー</td><td>50〜200ms</td><td>Vercel のエッジならグローバルで低遅延</td></tr>
+    <tr><td>サーバー処理（Flask）</td><td>5〜20ms</td><td>プロンプト組み立て、バリデーション</td></tr>
+    <tr><td>Anthropic API 応答</td><td class="warn">3〜15秒</td><td>ボトルネック。入力トークン数に比例して増加</td></tr>
+    <tr><td>サーバー → クライアント</td><td>50〜200ms</td><td>-</td></tr>
+    <tr><td><strong>合計</strong></td><td><strong>4〜16秒</strong></td><td>ユーザー体感はほぼ API 応答時間に依存</td></tr>
+  </table>
+
+  <h3>速度改善策</h3>
+  <table>
+    <tr><th>対策</th><th>効果</th><th>実装難易度</th></tr>
+    <tr><td><strong>ストリーミング応答</strong></td><td class="ok">体感速度が劇的に向上（最初の文字が0.5秒で表示）</td><td>中（SSE実装が必要）</td></tr>
+    <tr><td>Haiku 4.5 切り替え</td><td class="ok">応答時間 1/2〜1/3 に短縮</td><td>低（環境変数変更のみ）</td></tr>
+    <tr><td>会話履歴の要約圧縮</td><td>長い会話での遅延を抑制</td><td>中</td></tr>
+    <tr><td>プロンプトキャッシュ</td><td>初回以降のTTFT短縮</td><td>低（APIパラメータ追加のみ）</td></tr>
+  </table>
+
+  <div class="highlight-box">
+    <strong>最優先:</strong> ストリーミング応答の実装。<br>
+    現在は全文生成完了まで待つため、長い回答では10秒以上の「無反応」が生じる。
+    SSE (Server-Sent Events) でトークン単位に流すことで、最初の文字が 0.3〜0.8秒で表示され、体感が劇的に向上する。
+  </div>
+</section>
+
+<!-- ============================== -->
+<section id="pricing">
+  <h2>5. 適切な価格設定の考察</h2>
+
+  <h3>コスト構造（月額固定費 + 変動費）</h3>
+  <table>
+    <tr><th>項目</th><th>月額</th><th>備考</th></tr>
+    <tr><td>Vercel Pro</td><td>¥3,000</td><td>$20/月</td></tr>
+    <tr><td>Supabase Free</td><td>¥0</td><td>Free枠で十分</td></tr>
+    <tr><td>ドメイン（年間）</td><td>¥200</td><td>年¥2,000程度 ÷ 12</td></tr>
+    <tr><td>固定費 小計</td><td class="cost">¥3,200/月</td><td>-</td></tr>
+    <tr><td colspan="3" style="height:8px;border:none"></td></tr>
+    <tr><td>Anthropic API（変動費）</td><td>利用量に依存</td><td>下記シミュレーション参照</td></tr>
+  </table>
+
+  <h3>価格設定シミュレーション</h3>
+  <div class="scenario-grid">
+    <div class="scenario-card">
+      <h4>無料提供モデル</h4>
+      <p class="price" style="color:var(--green)">¥0/人</p>
+      <p class="detail">
+        API費用は全額事業者負担。<br>
+        利用制限: 1日5往復まで。<br>
+        Haiku利用でシナリオA: 月¥15,000<br>
+        <span class="warn">→ 利用が増えると赤字リスク</span>
+      </p>
+    </div>
+    <div class="scenario-card">
+      <h4>フリーミアム</h4>
+      <p class="price">¥0 + ¥500/月</p>
+      <p class="detail">
+        無料枠: 1日3往復 (Haiku)<br>
+        有料枠: 無制限 (Sonnet) ¥500/月<br>
+        有料100人で ¥50,000 → API費用をカバー<br>
+        <span class="ok">→ 持続可能な構造</span>
+      </p>
+    </div>
+    <div class="scenario-card">
+      <h4>月額サブスク</h4>
+      <p class="price">¥980/月</p>
+      <p class="detail">
+        全ユーザー月額課金。<br>
+        500人加入で ¥490,000/月<br>
+        Sonnet + キャッシュで十分利益<br>
+        <span class="ok">→ 最もシンプルで収益性高い</span>
+      </p>
+    </div>
+  </div>
+
+  <h3>1ユーザーあたりの原価（Haiku + キャッシュ）</h3>
+  <table>
+    <tr><th>利用頻度</th><th>API原価/人/月</th><th>備考</th></tr>
+    <tr><td>週1回・5往復</td><td class="ok">¥15</td><td>ライトユーザー</td></tr>
+    <tr><td>毎日・5往復</td><td class="cost">¥60</td><td>デイリーユーザー</td></tr>
+    <tr><td>毎日・10往復</td><td class="warn">¥150</td><td>ヘビーユーザー</td></tr>
+  </table>
+
+  <div class="ok-box">
+    <strong>推奨:</strong> Haiku 4.5 ベースであれば、¥500/月のサブスクで十分に利益が出る。
+    Sonnet 品質が必要な場合は ¥980/月。
+    無料で提供する場合は <strong>1日の往復数制限（3〜5回）</strong> が必須。
+  </div>
+</section>
+
+<!-- ============================== -->
+<section id="architecture">
+  <h2>6. 推奨アーキテクチャ</h2>
+
+  <h3>現在の構成 vs 推奨構成</h3>
+
+  <div class="arch-diagram">
+現在:
+  ブラウザ → Flask (localhost) → Anthropic API
+            ↓
+         feedback.jsonl (ローカルファイル)
+         localStorage (会話履歴)
+
+推奨（1,000ユーザー規模）:
+  ブラウザ → Vercel Edge → Vercel Serverless (Python)
+                                    ↓
+                              Anthropic API (SSE streaming)
+                                    ↓
+                              Supabase PostgreSQL
+                              ├── conversations (会話履歴)
+                              ├── feedback (フィードバック)
+                              └── users (ユーザー管理)
+  </div>
+
+  <h3>構成要素と役割</h3>
+  <table>
+    <tr><th>要素</th><th>現在</th><th>推奨</th><th>理由</th></tr>
+    <tr><td>ホスティング</td><td>localhost</td><td>Vercel Pro</td><td>グローバルCDN、自動スケール、SSL</td></tr>
+    <tr><td>ランタイム</td><td>Flask dev server</td><td>Vercel Serverless Python</td><td>同時接続のスケーリングが自動</td></tr>
+    <tr><td>会話履歴</td><td>localStorage</td><td>Supabase DB</td><td>デバイス間同期、サーバー側検証</td></tr>
+    <tr><td>フィードバック</td><td>JSONL file</td><td>Supabase DB</td><td>永続化、検索、分析が容易</td></tr>
+    <tr><td>ユーザー認証</td><td>名前入力（自己申告）</td><td>Supabase Auth</td><td>なりすまし防止、安全な識別</td></tr>
+    <tr><td>AI応答</td><td>同期（全文待ち）</td><td>SSE ストリーミング</td><td>体感速度の劇的改善</td></tr>
+  </table>
+</section>
+
+<!-- ============================== -->
+<section id="roadmap">
+  <h2>7. 段階的スケールアップの手順</h2>
+
+  <h3>Phase 1: 最小限のデプロイ（〜50人）</h3>
+  <div class="ok-box">
+    <strong>目標:</strong> まず動くものを公開して、フィードバックを集める<br>
+    <strong>変更点:</strong>
+    <ul>
+      <li>Vercel にデプロイ（vercel.json + requirements.txt 追加）</li>
+      <li>Anthropic API キーを Vercel 環境変数に設定</li>
+      <li>フィードバックは /tmp に書き込み（揮発性だが最小工数）</li>
+      <li>Haiku 4.5 に切り替えてコスト抑制</li>
+    </ul>
+    <strong>月額:</strong> Vercel Free + API ≈ ¥3,000〜¥5,000
+  </div>
+
+  <h3>Phase 2: データ永続化（〜200人）</h3>
+  <div class="highlight-box">
+    <strong>目標:</strong> フィードバックと会話履歴を永続化<br>
+    <strong>変更点:</strong>
+    <ul>
+      <li>Supabase にフィードバックテーブルを作成（JSONL → PostgreSQL）</li>
+      <li>会話履歴を Supabase に保存（localStorage からの移行）</li>
+      <li>プロンプトキャッシュを有効化（コスト70%削減）</li>
+      <li>ストリーミング応答の実装（SSE）</li>
+    </ul>
+    <strong>月額:</strong> Vercel Free/Pro + Supabase Free + API ≈ ¥8,000〜¥20,000
+  </div>
+
+  <h3>Phase 3: 本格運用（〜1,000人）</h3>
+  <div class="highlight-box">
+    <strong>目標:</strong> 安定運用と収益化<br>
+    <strong>変更点:</strong>
+    <ul>
+      <li>Vercel Pro 移行（関数タイムアウト60秒）</li>
+      <li>Supabase Auth でユーザー認証（名前 → メール/SNSログイン）</li>
+      <li>利用量制限の実装（1日の往復数上限 or サブスク課金）</li>
+      <li>会話履歴の要約圧縮（長期会話のコスト抑制）</li>
+      <li>フィードバック分析ダッシュボード</li>
+      <li>ペルソナ自動改修パイプライン（将来）</li>
+    </ul>
+    <strong>月額:</strong> Vercel Pro ¥3,000 + Supabase Free ¥0 + API ¥18,000〜¥142,000<br>
+    <strong>収益:</strong> ¥500/月 × 200人課金 = ¥100,000（黒字化ライン）
+  </div>
+
+  <h3>判定マトリクス</h3>
+  <table>
+    <tr><th>要件</th><th>現環境で対応可能か</th><th>対応策</th></tr>
+    <tr><td>50人利用</td><td class="ok">対応可能</td><td>Vercel Free + Haiku でコスト最小化</td></tr>
+    <tr><td>200人利用</td><td class="ok">対応可能</td><td>Vercel Pro + Supabase Free + プロンプトキャッシュ</td></tr>
+    <tr><td>500人利用</td><td class="warn">条件付き対応可能</td><td>Haiku必須 + 利用制限 or サブスク課金</td></tr>
+    <tr><td>1,000人利用</td><td class="warn">条件付き対応可能</td><td>Haiku + キャッシュ + 利用制限 + 課金で持続可能</td></tr>
+    <tr><td>1,000人（Sonnet品質維持）</td><td class="danger">費用課題</td><td>¥980/月サブスク or 企業スポンサーが必要</td></tr>
+  </table>
+
+  <div class="ok-box">
+    <strong>最終結論:</strong><br>
+    現在の Vercel + Supabase + Mac mini 環境で <strong>1,000人規模は技術的に対応可能</strong>。<br>
+    ボトルネックは技術ではなく <strong>API費用</strong>。<br>
+    <strong>Haiku 4.5 + プロンプトキャッシュ + 利用制限</strong> の組み合わせで月額 ¥20,000〜¥40,000 に収められる。<br>
+    ¥500/月のサブスクを100人が契約すれば黒字化する。
+  </div>
+</section>
+
+<div class="footnote">
+  <p><strong>免責事項:</strong> 本レポートは 2026年7月1日時点の Anthropic API 料金、Vercel/Supabase プラン情報に基づく試算です。
+  API 料金の変更、為替変動（$1=¥150 で計算）、利用パターンの変化により実際の費用は異なる場合があります。</p>
+  <p>Generated by Claude Code | honda-ai project</p>
+</div>
+
+</div>
+</body>
+</html>
