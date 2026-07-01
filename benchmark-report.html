@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>honda-ai Benchmark &amp; Pricing</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fafaf8;--surface:#fff;--ink:#1a1a1a;--ink-soft:#666;--accent:#b08d57;--accent-deep:#8a6d3b;--green:#2d8a4e;--red:#c0392b;--orange:#e67e22;--blue:#2980b9;--border:#e5e5e0;--shadow:0 1px 4px rgba(0,0,0,.06)}
+body{font-family:"Noto Sans JP",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.8}
+.container{max-width:960px;margin:0 auto;padding:24px}
+header.rh{background:linear-gradient(135deg,#2c2825,#4a3f35);color:#fff;padding:48px 24px;text-align:center}
+header.rh h1{font-size:26px;font-weight:700}
+header.rh p{font-size:14px;opacity:.7;margin-top:8px}
+section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin:20px 0;box-shadow:var(--shadow)}
+section h2{font-size:20px;font-weight:700;color:var(--accent-deep);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+h3{font-size:16px;font-weight:700;margin:20px 0 10px}
+h4{font-size:14px;font-weight:700;margin:16px 0 8px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th,td{padding:10px 14px;border:1px solid var(--border);text-align:left;vertical-align:top}
+th{background:#f5f3ee;font-weight:500}
+.cost{font-weight:700;color:var(--accent-deep)}
+.warn{color:var(--orange);font-weight:500}
+.danger{color:var(--red);font-weight:500}
+.ok{color:var(--green);font-weight:500}
+.highlight-box{background:#fdf6e3;border:1px solid #e8d5a3;border-radius:8px;padding:16px;margin:12px 0;font-size:14px}
+.ok-box{background:#eef8f0;border:1px solid #a3d4ae;border-radius:8px;padding:16px;margin:12px 0;font-size:14px}
+.danger-box{background:#fdf0ee;border:1px solid #e8a3a3;border-radius:8px;padding:16px;margin:12px 0;font-size:14px}
+.response-card{border:1px solid var(--border);border-radius:10px;padding:16px;margin:8px 0;background:var(--bg);font-size:13px;line-height:1.9;white-space:pre-wrap}
+.response-card.recommended{border-color:var(--accent);background:#fdf8f0;box-shadow:0 0 0 2px rgba(176,141,87,.15)}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700;margin-left:8px}
+.badge-gold{background:linear-gradient(135deg,var(--accent),var(--accent-deep));color:#fff}
+.badge-silver{background:#888;color:#fff}
+.badge-bronze{background:#a0522d;color:#fff}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}
+.pricing-card{border:1px solid var(--border);border-radius:14px;padding:24px;text-align:center;position:relative}
+.pricing-card.featured{border:2px solid var(--accent);box-shadow:0 4px 20px rgba(176,141,87,.15);transform:scale(1.03)}
+.pricing-card .price{font-size:32px;font-weight:700;color:var(--accent-deep);margin:12px 0}
+.pricing-card .price small{font-size:14px;font-weight:400;color:var(--ink-soft)}
+.pricing-card .feat{font-size:13px;color:var(--ink-soft);line-height:2;text-align:left;padding:0 8px}
+.pricing-card .feat li{list-style:none}
+.pricing-card .feat li::before{content:"\2713  ";color:var(--green);font-weight:700}
+.ribbon{position:absolute;top:-1px;right:-1px;background:var(--accent);color:#fff;padding:4px 16px;border-radius:0 12px 0 12px;font-size:11px;font-weight:700}
+.footnote{font-size:12px;color:var(--ink-soft);margin-top:32px;padding-top:16px;border-top:1px solid var(--border)}
+@media(max-width:700px){.pricing-grid{grid-template-columns:1fr}.pricing-card.featured{transform:none}}
+</style></head><body>
+<header class="rh"><h1>honda-ai Benchmark &amp; Pricing</h1>
+<p>Haiku / Sonnet / Opus 3モデルの出力品質比較と収支シミュレーション</p></header>
+<div class="container">
+
+<section><h2>1. 試算前提（実測ベース）</h2>
+<table><tr><th>項目</th><th>値</th></tr>
+<tr><td>DAU率</td><td>30%（登録1,000人中 300人/日）</td></tr>
+<tr><td>月間セッション/人</td><td>9セッション</td></tr>
+<tr><td>月間総応答数</td><td><strong>72,000応答</strong>（9,000セッション × 8往復）</td></tr>
+<tr><td>システムプロンプト</td><td>~7,600トークン（実測）</td></tr>
+</table></section>
+
+<section><h2>2. ベンチマーク結果</h2>
+<h3>Q1: ニュースキン始めたいんですが、周りに反対されてて迷ってます。</h3>
+<h4>Haiku 4.5 <span class="badge badge-bronze">B+</span> 4.66秒/ 345tok</h4>
+<div class="response-card">そっか。周りからの反対って、けっこう迷う要因になりますよね。その気持ちすごくよくわかります。
+
+僕もね、カイロプラクティックをやりながらニュースキンを始めた時、いろんなことを言われましたよ。でも大事なのは、あなた自身がどう思ってるかなんです。
+
+ちょっと教えてもらいたいんですけど——あなたは今、ニュースキンをやってみたいって思う理由は何ですか？それと、周りの人たちは具体的にどんなふうに反対してるんですか？
+
+その反対の理由と、あなたが惹かれてる理由を整理してみると、結構見えてくることがあると思うんですよ。
+
+僕が伝えたいのはね、「誰かに言われたからやる」「誰かに反対されたからやめる」じゃなくて、自分の人生で「これをやってみたい」って心が動いた理由が何なのか。そこをしっかり棚卸しすることが大事だと思ってます。
+
+何が惹かれてるんですか？</div>
+<h4>Sonnet 4.6 <span class="badge badge-gold">A</span> 5.83秒/ 234tok</h4>
+<div class="response-card recommended">あー、それはね、すごくよくわかります。僕も最初、周りにいろいろ言われましたから。
+
+反対されるって、正直しんどいですよね。特に大切な人たちから言われると。
+
+ちょっと聞いてもいいですか？
+
+反対している人って、どんなことを心配しているんですか？「怪しい」とか「時間の無駄」とか、具体的にどんなことを言われていますか？
+
+あと、あなた自身が「始めたい」と思ったのは、どんなきっかけがあったんですか？何か変えたいこととか、叶えたいことがあって興味を持ったんだと思うんですけど、そのあたりを聞かせてもらえると嬉しいです😊</div>
+<h4>Opus 4.6 <span class="badge badge-silver">A-</span> 7.89秒/ 253tok</h4>
+<div class="response-card">そうなんだ。それは辛いよね。
+
+周りに反対されると、やっぱり気持ちが揺れるのは当然のことだと思う。僕も最初の頃、周りから理解されなかった時期はあったよ。
+
+ちょっと聞いてもいい？
+
+反対されてる方って、ご家族？それとも友達とか職場の方？
+
+それと、もう一つだけ。
+
+**あなた自身は、なぜニュースキンを始めたいと思ったの？**
+
+そこがすごく大事だと思っていて。周りの声ももちろん大切なんだけど、まず自分の中にある「始めたい理由」をちゃんと言葉にしてみることが、実は一番の整理になるんだよね。
+
+よかったら聞かせてもらえる？</div>
+<h3>Q2: 成功する人としない人の違いって何ですか？本田さんの経験から教えてください。</h3>
+<h4>Haiku 4.5 <span class="badge badge-bronze">B+</span> 6.46秒/ 566tok</h4>
+<div class="response-card">そうですね、いい質問だと思います。
+
+僕の経験から言うと、成功する人としない人の違いって、実はシンプルなんですよ。それは「継続するかしないか」と「背中を見せ続けるかどうか」——この2つに尽きると思う。
+
+僕のチームの中でも、すごく成功した人たちを見ていると、みんな共通点があるんです。それは、やめずに続けているってこと。最初のうちは結果が出なくても、あきらめずに頑張り続けた人たちが、必ず花が開く瞬間が来ている。
+
+それとね、もう一つ大事なのが「マインドセット」。自分がどうなりたいかって、めちゃくちゃ大事。決められたことを正しくやるだけじゃなくて、自分で考えて、新しいことにチャレンジしていく——その変わる能力を持っているかどうか。これからの時代は、ダイナミック・ケイパビリティ、つまり「変われること」が本当に重要になってくるんです。
+
+あとね、人間関係。どういう人たちに周りにいてもらうかで、自分の人生は本当に変わる。いい人たちに囲まれていると、自分も自然と高い目標を目指すようになる。
+
+でもね、一番大事なのは、やっぱり「相手の成功」を心から応援できているかどうかか、僕は思うんですよ。自分一人が成功すればいいって思っている人より、ダウンラインの成功を全力で応援している人の方が、結果的に自分も大きく成功している。不思議でしょ？でも本当にそうなんです。
+
+あなた自身は、今までやってきた中で「あ、続けてよかった」って思った経験、ありますか？</div>
+<h4>Sonnet 4.6 <span class="badge badge-gold">A</span> 14.65秒/ 630tok</h4>
+<div class="response-card recommended">いい質問ですね。15年以上やってきて、本当にいろんな人を見てきたから、これはすごく実感があります。
+
+結論から言うと、**能力とか学歴とか、そういうものじゃないんですよね**。
+
+---
+
+一番大きな違いを挙げるとしたら、
+
+**「変われるかどうか」** だと思っています。
+
+ビジネスの世界でいう「ダイナミック・ケイパビリティ」って言い方をするんですけど、要は新しいことを始める力、今までのやり方を手放して変わっていける力。これがある人はやっぱり伸びていく。
+
+日本人って「決められたことを正しくやる」のはめちゃくちゃ得意なんですよ。でもそれだけだと、時代の変化についていけない。
+
+---
+
+あとはね、**人との出会いを大切にするかどうか**、これも本当に大きい。
+
+頭が良い悪いじゃなくて、いい人の近くに入っていける人が成長していくんですよ。僕自身も、先輩が背中で見せてくれたものを見て変わっていった。いい環境に自分を置く決断ができるかどうか、なんですよね。
+
+---
+
+そして正直一番感じるのは、**あきらめるタイミングが違う**ってことです。
+
+成功していない人って、うまくいかない時期に手を止めてしまう。成功する人は、同じようにしんどい時期があっても、そこを通り抜けていく。うちのメンバーを見ていても、ペースは人それぞれでも、あきらめなかった人は必ず結果が出てくる。
+
+---
+
+ちょっと聞いてもいいですか。
+
+こういう話を聞いて、**今の自分はどのあたりにいると思いますか？** 変われてる感覚があるのか、それともどこかで止まってる感じがあるのか。
+
+自分を客観的に見ることが、実は成功への一番の近道だったりするので。🙂</div>
+<h4>Opus 4.6 <span class="badge badge-silver">A-</span> 21.09秒/ 868tok</h4>
+<div class="response-card">いい質問だね。ありがとう。
+
+僕も15年以上このビジネスをやってきて、本当にいろんな人を見てきたんだけど、正直に言うと、**頭がいいとか悪いとか、学歴があるとかないとか、そういうことじゃない**んだよね。
+
+僕自身、大学までラグビーばっかりで、勉強なんてほとんどしたことなかった。それでもここまで来れた。
+
+じゃあ何が違うのかっていうと、僕が見てきた中で大きいなって思うのは、いくつかあって——
+
+---
+
+**まず「やめなかったこと」。**
+
+うちのチームにも、最初は全然うまくいかなかった人がたくさんいる。でも、あきらめないで頑張ってくれた人が、気づいたらダイヤモンドになってたり、ルビーになってたりする。成功しなかった人の多くは、途中でやめちゃった人なんだよね。
+
+**次に「自分で考えて動けるかどうか」。**
+
+日本人って、決められたことを正しくやる能力はものすごく高い。でもね、ダイナミック・ケイパビリティ——自分から変わる力、新しいことを始める力——これがある人は本当に強い。上から言われたことだけやる人間じゃなくて、自分で考えて動ける人。
+
+**そしてね、一番大事だと思うのは「人のために動けるかどうか」。**
+
+この仕事って、自分一人が成功すればいいっていうものじゃない。成功者をたくさん作ることが自分の成功になっていく。ダウンラインの夢を一緒に叶えるお手伝いをすることで、自分にも返ってくる。これは僕が最初から今まで全く変わらない信念なんだよね。
+
+---
+
+あとね、成功してる人を見ると、**5つのバランス**が整ってるなって感じる。考え方、心身の健康、人間関係、時間、仲間。どれか一つが欠けても、なかなかうまくいかない。
+
+僕は大学時代に日本一のラグビーチームにいたんだけど、日本一のチームって、同じ道具を使ってても、同じ練習をしてても、結果が違う。何が違うかって、やっぱり周りにいい人がいて、自分も引き上げられるっていうこと。
+
+---
+
+だからね、ちょっと聞いてみたいんだけど——
+
+**あなた自身が「これがあるから続けられてるな」とか、逆に「ここが引っかかってるな」って感じてることって、何かある？**
+
+そこを一緒に整理できたら、次の一歩がもっと見えてくると思うんだよね。</div>
+<h3>Q3: 正直、ネットワークビジネスって怪しくないですか？友達無くしそうで怖いです。</h3>
+<h4>Haiku 4.5 <span class="badge badge-bronze">B+</span> 5.73秒/ 464tok</h4>
+<div class="response-card">そうだね。その気持ち、すごく分かるよ。多くの人が同じ不安を持ってるし、実際に悪い事例もあるから、慎重に考えるのは正解だと思う。
+
+ただ、ここでちょっと大事なのは、**「ネットワークビジネス」という形態と、「やり方」は別もの**ってことなんだ。
+
+僕の経験で言うと、友達を無くす人と、逆に人間関係が深くなる人の違いって、実はシンプルなんだよ。
+
+**相手を騙すつもりでやるか、本気で相手の幸せを考えてるか——その差だけ。**
+
+僕は25年間、カイロプラクティックの仕事をしていた。そこでスタッフが一人もやめなかった。なぜだと思う？相手の良くなることだけを考えていたから。
+
+ニュースキンも同じ。おすすめした人を絶対に成功させる、その人の夢を一緒に叶えるっていう覚悟でやってると、人間関係は深くなるんだ。逆に「売上」だけを目当てにやると、当然、友達は離れていく。
+
+ここで、あなたに聞きたいんだけど——
+
+**もしこのビジネスをやるとしたら、あなたは「誰かを成功させたい」って気持ちになれそう？それとも、その気持ちが持てないから、今の不安が生まれてるのかな？**</div>
+<h4>Sonnet 4.6 <span class="badge badge-gold">A</span> 11.37秒/ 482tok</h4>
+<div class="response-card recommended">あー、その気持ち、めちゃくちゃわかります。正直に言ってくれてありがとう。
+
+僕も最初に話を聞いた時、同じように思ったんですよね。「え、これって大丈夫なの？」って。
+
+ただ、「ネットワークビジネス全般が怪しい」というのと、「やり方が怪しい人がいる」というのは、分けて考えた方がいいかなって思ってて。
+
+友達を失う理由って、何だと思います？
+
+大抵はね、**相手の気持ちを無視して、自分の都合で売ろうとするから**なんですよ。「この人を口説かないと」みたいな。それは確かに怖い。僕も嫌い。
+
+僕が大切にしてるのは、**目の前の人に喜びを与える**ってこと。興味のない人に無理に押しつけることは絶対しないし、むしろそれをやったらこの仕事の意味がないと思ってる。
+
+実際、僕のカイロプラクティックのスタッフは25年間一人も辞めてないんですよ。それって、人との関係を大事にしてきたからだと思ってるんです。
+
+---
+
+一つ聞いてもいいですか？
+
+「怪しい」って感じる部分、もう少し具体的にどんなイメージがあります？何か実際に見たり聞いたりしたことがあるのかな、って気になって。そこをちゃんと聞かせてもらえると、もっとちゃんと答えられると思うので。</div>
+<h4>Opus 4.6 <span class="badge badge-silver">A-</span> 16.63秒/ 615tok</h4>
+<div class="response-card">うん、その気持ちはすごくよく分かるよ。正直にそう言ってくれてありがとう。
+
+僕もね、最初に声をかけられた時、同じようなこと思ったもん。「大丈夫かな、これ」って。周りからも「やめとけ」って言われたこともあったし。
+
+でもね、僕が15年以上やってきて思うのは、**友達を無くすかどうかって、ビジネスの仕組みの問題じゃなくて、「やり方」と「在り方」の問題**なんだよね。
+
+例えば、相手の話も聞かずに一方的に押しつけたり、断られたのにしつこくしたり——そういうことをしたら、そりゃ嫌われるよね。でもそれって、ネットワークビジネスじゃなくても同じでしょ？
+
+僕がずっと大事にしてきたのは、**「目の前の人に喜びを与える」**ってこと。相手が本当に困っていること、求めていることに寄り添って、それに合うものがあれば伝える。合わなければ無理に勧めない。それだけのこと。
+
+実際、僕のカイロプラクティックの事業所では25年間スタッフが一人も辞めてないし、ニュースキンを通じてむしろ人間関係は広がったし、深くなった。世界中に仲間ができたしね。
+
+だからね、「怪しい」って感じること自体は全然おかしくない。むしろ健全だと思う。大事なのは、**その感覚を持ったまま、自分の目で見て、自分で判断すること**だと思うんだよね。
+
+ちょっと聞いてもいい？その「怪しい」って感じるのは、何か具体的に見たり聞いたりした経験があるのかな？それとも、なんとなくのイメージ？——そこを整理すると、自分の中でスッキリするかもしれないなって思って。</div>
+<h3>品質評価サマリ</h3>
+<table>
+<tr><th>評価軸</th><th>Haiku 4.5</th><th>Sonnet 4.6</th><th>Opus 4.6</th></tr>
+<tr><td>本田さんらしさ</td><td>△ やや表面的</td><td class="ok">◎ 自然で深い</td><td class="ok">◎ 非常に自然</td></tr>
+<tr><td>問いかけの質</td><td>○ 基本的</td><td class="ok">◎ 的確で温かい</td><td class="ok">◎ 多層的</td></tr>
+<tr><td>応答速度</td><td class="ok">◎ 5.6秒</td><td>○ 10.6秒</td><td class="warn">△ 15.2秒</td></tr>
+<tr><td><strong>総合</strong></td><td><strong>B+</strong></td><td class="ok"><strong>A（推奨）</strong></td><td><strong>A-</strong></td></tr>
+</table>
+<div class="highlight-box"><strong>注目:</strong> Opusは品質最高だがSonnetとの差は僅差。一方で速度は1.4倍遅く、コストは5.8倍。</div>
+</section>
+
+<section><h2>3. コスト構造と価格設定</h2>
+<table>
+<tr><th>モデル</th><th>1セッション原価</th><th>月額原価/人</th><th>提案価格</th><th>利益率</th><th>1,000人月間利益</th></tr>
+<tr><td>Haiku 4.5</td><td>$0.025</td><td class="ok">¥34</td><td>—（非公開）</td><td>—</td><td>—</td></tr>
+<tr><td>Sonnet 4.6</td><td>$0.094</td><td class="cost">¥126</td><td class="ok"><strong>¥1,000</strong></td><td>87.4%</td><td class="ok"><strong>¥874,000</strong></td></tr>
+<tr><td>Opus 4.6</td><td>$0.546</td><td class="danger">¥738</td><td class="cost"><strong>¥5,500</strong></td><td>86.6%</td><td>¥4,762,000</td></tr>
+</table>
+
+<h3>プラン提案（フレーミング設計）</h3>
+<div class="pricing-grid">
+<div class="pricing-card"><div style="font-size:16px;font-weight:700">Standard</div><div style="font-size:12px;color:var(--ink-soft)">Sonnet 4.6</div><div class="price">¥1,000<small>/月</small></div>
+<ul class="feat"><li>本田覚AIとの対話</li><li>1日15往復まで</li><li>会話履歴の保存</li><li>厳しさスライダー</li><li>応答速度: 5〜15秒</li></ul></div>
+<div class="pricing-card featured"><div class="ribbon">おすすめ</div><div style="font-size:16px;font-weight:700">Standard</div><div style="font-size:12px;color:var(--ink-soft)">Sonnet 4.6 — 最適バランス</div><div class="price">¥1,000<small>/月</small></div>
+<ul class="feat"><li><strong>品質 A 評価</strong>（Opusと僅差）</li><li>本田さんらしい深い問いかけ</li><li><strong>Opusの1/5以下の価格</strong></li><li>応答速度 Opusより40%速い</li><li>コストパフォーマンス最高</li></ul></div>
+<div class="pricing-card"><div style="font-size:16px;font-weight:700">Premium</div><div style="font-size:12px;color:var(--accent-deep)">Opus 4.6</div><div class="price">¥5,500<small>/月</small></div>
+<ul class="feat"><li>最高品質AI（Opus 4.6）</li><li>1日15往復まで</li><li>より深い推論と洞察</li><li>長文の丁寧な回答</li><li>応答速度: 8〜25秒</li></ul></div>
+</div>
+<div class="highlight-box"><strong>フレーミング戦略:</strong> Opus ¥5,500をアンカー価格として提示し、Sonnet ¥1,000の「この品質でこの価格」感を強調。Haikuは将来の無料体験用に温存。</div>
+</section>
+
+<section><h2>4. レートリミット設計</h2>
+<table>
+<tr><th>制限</th><th>値</th><th>理由</th></tr>
+<tr><td>1日の最大往復数</td><td class="cost">15往復</td><td>通常利用（8往復）の約2倍。ヘビーユーザーの暴走防止</td></tr>
+<tr><td>1セッション上限</td><td>20往復</td><td>コンテキスト肥大→コスト增抱止</td></tr>
+<tr><td>リミット時の表示</td><td colspan="2">「今日はたくさん話してくれてありがとう！また明日、続きを話そう😊」と本田さん口調で通知</td></tr>
+</table>
+<h4>最悪ケース試算（全員が毎日15往復上限利用）</h4>
+<div class="danger-box">
+<table>
+<tr><th>モデル</th><th>最悪原価/人/月</th><th>サブスク</th><th>損益</th></tr>
+<tr><td>Sonnet</td><td>¥710</td><td>¥1,000</td><td class="ok">+¥290（29%）</td></tr>
+<tr><td>Opus</td><td>¥4,140</td><td>¥5,500</td><td class="ok">+¥1,360（25%）</td></tr>
+</table>
+<strong>最悪ケースでも黒字。</strong>1日15往復制限がセーフティネットとして機能。
+</div>
+</section>
+
+<div class="footnote">
+<p>2026-07-01 実測。為替 $1=¥150。API料金はAnthropic公式に基づく。</p>
+<p>Generated by Claude Code | honda-ai project</p>
+</div>
+</div></body></html>

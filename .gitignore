@@ -3,3 +3,4 @@
 data/feedback.jsonl
 __pycache__/
 *.pyc
+.vercel
