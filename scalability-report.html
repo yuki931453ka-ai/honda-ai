@@ -331,6 +331,48 @@ li{margin:4px 0}
     Sonnet 品質が必要な場合は ¥980/月。
     無料で提供する場合は <strong>1日の往復数制限（3〜5回）</strong> が必須。
   </div>
+
+  <h3>ユーザー数 × 収支バランス分析</h3>
+  <div class="highlight-box">
+    <strong>前提:</strong> DAU率30%（登録1,000人中、日常利用300人）/ 1日1セッション・8往復平均 / 全登録者がサブスク課金<br>
+    固定費: Vercel Pro ¥3,000 + ドメイン ¥200 = <strong>¥3,200/月</strong>
+  </div>
+
+  <h4>¥500/月サブスク × Sonnet（キャッシュあり）</h4>
+  <p style="font-size:13px;color:var(--ink-soft);margin-bottom:8px">API単価: 登録1人あたり約¥142/月（DAU30%・8往復ベース）</p>
+  <table>
+    <tr><th>登録者数</th><th>DAU</th><th>月間セッション</th><th>API費用</th><th>固定費</th><th>月額収入</th><th>損益</th></tr>
+    <tr><td>100人</td><td>30人</td><td>900</td><td class="cost">¥14,200</td><td>¥3,200</td><td>¥50,000</td><td class="ok">+¥32,600</td></tr>
+    <tr><td>300人</td><td>90人</td><td>2,700</td><td class="cost">¥42,600</td><td>¥3,200</td><td>¥150,000</td><td class="ok">+¥104,200</td></tr>
+    <tr><td>500人</td><td>150人</td><td>4,500</td><td class="cost">¥71,000</td><td>¥3,200</td><td>¥250,000</td><td class="ok">+¥175,800</td></tr>
+    <tr><td>1,000人</td><td>300人</td><td>9,000</td><td class="cost">¥142,000</td><td>¥3,200</td><td>¥500,000</td><td class="ok">+¥354,800</td></tr>
+    <tr><td colspan="7" style="border:none;padding:4px"><em style="font-size:12px;color:var(--ink-soft)">黒字化ライン: 約28人（API ¥142/人 + 固定費按分 → 損益分岐 ≈ ¥3,200 ÷ (¥500 - ¥142) + 1 ≈ 10人〜）</em></td></tr>
+  </table>
+
+  <h4>¥500/月サブスク × Haiku（キャッシュあり）</h4>
+  <p style="font-size:13px;color:var(--ink-soft);margin-bottom:8px">API単価: 登録1人あたり約¥38/月（DAU30%・8往復ベース）</p>
+  <table>
+    <tr><th>登録者数</th><th>DAU</th><th>API費用</th><th>固定費</th><th>月額収入</th><th>損益</th><th>利益率</th></tr>
+    <tr><td>100人</td><td>30人</td><td class="cost">¥3,800</td><td>¥3,200</td><td>¥50,000</td><td class="ok">+¥43,000</td><td>86%</td></tr>
+    <tr><td>300人</td><td>90人</td><td class="cost">¥11,400</td><td>¥3,200</td><td>¥150,000</td><td class="ok">+¥135,400</td><td>90%</td></tr>
+    <tr><td>500人</td><td>150人</td><td class="cost">¥19,000</td><td>¥3,200</td><td>¥250,000</td><td class="ok">+¥227,800</td><td>91%</td></tr>
+    <tr><td>1,000人</td><td>300人</td><td class="cost">¥38,000</td><td>¥3,200</td><td>¥500,000</td><td class="ok">+¥458,800</td><td>92%</td></tr>
+  </table>
+
+  <h4>収支構造の核心</h4>
+  <div class="ok-box">
+    <strong>API費用は登録者数に比例して増えるが、サブスク収入も同率で増える。</strong><br>
+    1人あたりの限界利益（サブスク - API原価）がプラスである限り、人数が増えるほど利益は拡大する。<br><br>
+    <table style="max-width:500px">
+      <tr><th>モデル</th><th>サブスク</th><th>API原価/人</th><th>限界利益/人</th><th>黒字化人数</th></tr>
+      <tr><td>Sonnet + cache</td><td>¥500</td><td>¥142</td><td class="ok">¥358</td><td>9人〜</td></tr>
+      <tr><td>Haiku + cache</td><td>¥500</td><td>¥38</td><td class="ok">¥462</td><td>7人〜</td></tr>
+      <tr><td>Sonnet + cache</td><td>¥980</td><td>¥142</td><td class="ok">¥838</td><td>4人〜</td></tr>
+    </table>
+    <br>
+    <strong>結論: いずれの組み合わせでも、サブスク単価がAPI原価を上回るため、スケールするほど利益率が向上する構造。</strong>
+    1,000人×¥500の場合、Sonnetでも月35万円、Haikuなら月46万円の利益が見込める。
+  </div>
 </section>
 
 <!-- ============================== -->
@@ -412,7 +454,7 @@ li{margin:4px 0}
       <li>ペルソナ自動改修パイプライン（将来）</li>
     </ul>
     <strong>月額:</strong> Vercel Pro ¥3,000 + Supabase Free ¥0 + API ¥18,000〜¥142,000<br>
-    <strong>収益:</strong> ¥500/月 × 200人課金 = ¥100,000（黒字化ライン）
+    <strong>収益:</strong> ¥500/月 × 1,000人 = ¥500,000（Sonnet+cache時 API¥142,000 → 利益¥354,800）
   </div>
 
   <h3>判定マトリクス</h3>
@@ -422,15 +464,14 @@ li{margin:4px 0}
     <tr><td>200人利用</td><td class="ok">対応可能</td><td>Vercel Pro + Supabase Free + プロンプトキャッシュ</td></tr>
     <tr><td>500人利用</td><td class="warn">条件付き対応可能</td><td>Haiku必須 + 利用制限 or サブスク課金</td></tr>
     <tr><td>1,000人利用</td><td class="warn">条件付き対応可能</td><td>Haiku + キャッシュ + 利用制限 + 課金で持続可能</td></tr>
-    <tr><td>1,000人（Sonnet品質維持）</td><td class="danger">費用課題</td><td>¥980/月サブスク or 企業スポンサーが必要</td></tr>
+    <tr><td>1,000人（Sonnet品質維持）</td><td class="ok">¥500サブスクで黒字</td><td>限界利益¥358/人 → 月利益¥354,800</td></tr>
   </table>
 
   <div class="ok-box">
     <strong>最終結論:</strong><br>
-    現在の Vercel + Supabase + Mac mini 環境で <strong>1,000人規模は技術的に対応可能</strong>。<br>
-    ボトルネックは技術ではなく <strong>API費用</strong>。<br>
-    <strong>Haiku 4.5 + プロンプトキャッシュ + 利用制限</strong> の組み合わせで月額 ¥20,000〜¥40,000 に収められる。<br>
-    ¥500/月のサブスクを100人が契約すれば黒字化する。
+    現在の Vercel + Supabase 環境で <strong>1,000人規模は技術的にもコスト的にも対応可能</strong>。<br>
+    ¥500/月サブスクの場合、<strong>API原価を差し引いても1人あたり¥358〜¥462の限界利益</strong>があり、スケールするほど利益は拡大する。<br>
+    Sonnet品質でも <strong>黒字化ラインは約10人</strong>。1,000人で月利益¥35万〜¥46万。
   </div>
 </section>
 
